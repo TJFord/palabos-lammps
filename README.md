@@ -9,3 +9,7 @@ make sure you have installed a mpi library.
 5) compile lammps as a lib
 6) modify the Makefile in the given example, make sure the coupling/src is in the includePaths, the libraryPaths should link to lammps/src
 7) compile the embolism.cpp and run it using MPI.  
+
+# Reference:
+[Jifu Tan, Talid Sinno, Scott Diamond, A parallel fluid–solid coupling model using LAMMPS and Palabos based on the immersed boundary method, Journal of Computational Science, Vol 25, p89-100, 2018.](https://www.sciencedirect.com/science/article/pii/S187775031730981X)
+
