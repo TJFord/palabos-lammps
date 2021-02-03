@@ -35,7 +35,8 @@ FixFCM::FixFCM(LAMMPS *lmp, int narg, char **arg) :
   
     // perform initial allocation of atom-based array
   // register with Atom class
-  napply = force->inumeric(FLERR,arg[3]);
+  //napply = force->inumeric(FLERR,arg[3]);
+  napply = utils::inumeric(FLERR,arg[3],false,lmp);
   
   fexternal = NULL;
   grow_arrays(atom->nmax);
