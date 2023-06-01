@@ -1,0 +1,145 @@
+# 2d SRD test: big + small particles
+
+units		lj
+atom_style	molecular
+
+#atom_style	atomic
+atom_modify	first cells	# treat big as first group atom list
+dimension	3
+boundary 	f f p		# x periodic y fix z periodic
+
+# create big particles with sigma 1.0
+
+lattice		sc 1 # reduced density: factor^2=1/0.4
+bond_style      harmonic 
+#angle_style     rbc
+#dihedral_style  bend
+#bond_style      hybrid harmonic hill
+#angle_style     harmonic
+read_data       in.platelet 
+#read_data       in.platelet_3 
+
+#special_bonds lj/coul 0 1 1
+pair_style morse 3 
+pair_coeff * * 1e-3 1 2.0 2.0
+#pair_coeff 1 1 1e-3 1 2.0 2.0
+#pair_coeff 1 1 0.0 1 2
+#pair_coeff 2 2 0.0 1 2.0
+#pair_coeff 1 2 0.0 1 2.0
+#pair_coeff * 3 4e-3 1 1.5 2.0
+#pair_coeff 2 3 4e-3 1 1.7 2.0
+#pair_coeff 1 3 4e-3 1 1.9 2.0
+#pair_coeff 2 3 0.0 1 2
+#pair_coeff 1 3 0.0 1 2
+#pair_coeff 1 2 0.0 2.5 2.5
+#pair_coeff 1 1 0.0 0.5 1.5
+#pair_coeff 1 1 1.4e-6 0.5 1.0
+#pair_style soft 3.0 # No contraction 7/21/2016 
+#pair_coeff 1 1 0.1 2.5  
+#pair_coeff 2 2 0.0  
+#pair_coeff 1 2 0.0 
+
+#pair_coeff 2 2 1e-8 1.0 
+#pair_coeff 2 2 0.0 1.0 
+#pair_coeff 2 2 0.0 4.0
+#pair_style lj/cut 8 
+#pair_coeff 1 1 0 6 7
+#pair_coeff 1 1 0.0 0.1 1.707
+#set		type 1 mass 5000.0
+#mass            1 20
+
+group           cells type 1 
+#group         core type 2
+#group           plt molecule 1:223
+#group           wall_plt molecule 111:114 126:129 336:339 351:354
+#group           wall_plt id 150:792:12 151:792:12
+#group           wall_plt id 530:2772:42
+group           wall_plt type 3
+#group           w_rgt molecule 181:200
+#group           wall_plt molecule 1:64
+#group           plt molecule 1:4
+#velocity	core create 4e-6 87287 loop geom # set/change group (big) velocity at temperature=1.44,
+
+
+reset_timestep	0 # reset timestep to 0
+
+#neighbor	0.1 bin # set atom neighbor list for each atom
+neighbor	1 bin	    # create neighbor list: set skin=0.3, using bin style
+neigh_modify	delay 0 every 1 check no
+#neigh_modify    exclude group wall_plt
+comm_modify cutoff 12
+# by (atom_modify first big)
+
+# no pairwise interactions with small particles
+
+# use fix SRD to push small particles out from inside big ones
+
+timestep    1  
+
+fix		1 all nve
+fix             2 all langevin 9.2e-8 9.2e-8 20 723491
+#fix             2 core langevin 4e-10 4e-10 20 723491
+#fix             2 plt brownian 100 3.25e-8 723491 molecule
+#thermo		1000
+fix 7 wall_plt move linear 0.0 0.0 0.0
+#fix 7 wall_plt freeze
+#run             5000
+#reset_timestep 0
+#pair_coeff 1 2 0.0 1.96 2.5
+fix  3 all bond/create 1000 1 2 2.0 1 iparam 2 2 jparam 4 3 prob 0.5 23854
+#fix  9 all bond/create 5000 2 2 2.0 2 iparam 4 3 jparam 4 3 prob 0.5 23854
+fix  10 all bond/create 5000 1 3 2.0 2 iparam 2 2 jparam 5 3 #prob 0.5 23854
+fix  11 all bond/create 5000 2 3 2.0 2 iparam 4 3 jparam 5 3 #prob 0.5 23854
+#fix 8 all bond/create 5000 3 3 2.0 2 iparam 5 3 jparam 5 3
+#fix  3 all bond/create 1000 1 2 2.0 1 iparam 0 2 jparam 0 2 #prob 0.3 23854 
+#fix             7 wall_plt move linear 0.0 0.0 0.0
+#fix 4 all wall/harmonic ylo EDGE 1e-4 1 1.2 
+#unfix 1
+#unfix 2
+
+#fix             2 plt brownian 500 3.25e-8 723491 molecule
+fix 5 all fcm 1
+#fix 6 cells rigid molecule
+#fix 3 wall_plt wall/harmonic ylo EDGE 5e-2 2 
+fix 4 all wall/reflect xlo EDGE xhi EDGE ylo EDGE yhi EDGE
+#fix 4 plt wall/reflect xlo EDGE xhi EDGE yhi EDGE
+#fix 6 plt wall/harmonic ylo EDGE 1e-8 2 
+#fix  4 cells bond/create 1000 1 1 0.25 3 iparam 3 1 jparam 3 1 
+#fix  5 cells bond/create 1000 1 1 0.5 2 iparam 2 1 jparam 2 1 
+fix 6 all bond/break 1000 1 2.3 #prob 0.3 293741
+#fix 6 all bond/break 100 1 2.5 #prob 0.5 293741
+#fix             4 all enforce2d
+#fix             4 big move rotate 15 15 0 0 0 1 100
+#     nevery LBtype vis rho 
+#fix             4 cells lb/fluid 2 1 0.1667 1 dx 1.0 dm 1.0 printfluid 100000 zwall_velocity 0.0 1.6e-4
+#fix             4 cells lb/fluid 2 1 0.1667 1 dx 1.0 dm 1.0 printfluid 10000 zwall_velocity 0.0 1.6e-4
+#fix             5 cells lb/viscous
+#fix             4 btm freeze
+#fix             4 big setforce 0.0 0.0 0.0
+compute 7 all property/local btype batom1 batom2 
+compute 8 all bond/local dist
+
+#compute		tbig cells temp # computing temperature (temp) for atoms (big), name it as (tbig)
+#variable	pebig equal pe*atoms/count(cells) # varialbe (pebig)= pe*atoms/count(big)
+#variable	ebig equal etotal*atoms/count(cells)
+
+#thermo_modify	temp tbig
+#thermo_modify   lost ignore
+# reset (temp) defined in thermo_style as (tbig)
+thermo		1000
+#reset_timestep   0
+# output thermodynamic infor every 100 timesteps
+#dump            2 all atom 4000 dump.plt.atom
+#run 10000
+#unfix 1
+#undump 1
+#reset_timestep   0
+dump            2 all xyz 10 dump.plt.xyz
+dump 3 all local 10 dump.ad.bond index c_7[1] c_7[2] c_7[3] c_8
+dump           4 all custom 10 dump.plt.force id fx fy fz
+#dump_modify 2 element H He Li 
+#dump_modify 
+#dump 3 all local 1000 bondCreated f_5[1] f_5[2]
+#dump 4 all image 5000 image*  type type view 90 90
+run 1
+#run	       160000
